@@ -1,8 +1,8 @@
 const ROLES = [
   // --- 夜間行動角色 ---
-  { id: 'doppelganger', name: '化身幽靈', team: 'other', order: 1, hasAction: true, description: '查看一名玩家的牌並變為該角色。若變為有行動的角色需立即執行。若變為狼人陣營則加入狼人陣營。' },
+  { id: 'doppelganger', name: '化身幽靈', team: 'other', order: 1, hasAction: true, description: '查看一名玩家的牌並變為該角色。若變為有行動的角色需立即執行。若變為狼人或守夜人，則加入該陣營且在後續對應順序睜眼與夥伴相認。若變為失眠者，則不可在失眠者睜眼時同時睜眼，應在化身失眠者階段才睜眼。' },
   { id: 'werewolf', name: '狼人', team: 'wolf', order: 2, hasAction: true, description: '全體狼人（含狼王、神秘狼）睜眼相認。' },
-  { id: 'alpha_wolf', name: '狼王', team: 'wolf', order: 3, hasAction: true, description: '將中央獨立的一張狼人牌與另一名玩家交換（不能看牌）。' },
+  { id: 'alpha_wolf', name: '狼王', team: 'wolf', order: 3, hasAction: true, description: '將中央獨立設置 (垂直) 的一張狼人牌與另一名玩家交換（不能看牌）。' },
   { id: 'mystic_wolf', name: '神秘狼', team: 'wolf', order: 4, hasAction: true, description: '查看一名其他玩家的牌。' },
   { id: 'minion', name: '爪牙', team: 'wolf', order: 5, hasAction: true, description: '睜眼確認狼人（狼人舉手不睜眼）。若無狼人則狼人在中央。' },
   { id: 'mason', name: '守夜人', team: 'villager', order: 6, hasAction: true, description: '守夜人們睜開眼，確認彼此身份。' },
