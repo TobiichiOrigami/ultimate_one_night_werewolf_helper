@@ -35,6 +35,30 @@
         <span class="text-sm text-gray-400">建議人數：</span>
         <span id="player-count" class="text-xl font-bold">0</span>
       </div>
+
+      <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-inner">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-sm text-gray-400 font-medium">遊戲玩家人數</span>
+          <div class="flex items-center space-x-4 bg-gray-700 rounded-lg p-1">
+            <button onclick="adjustPlayerCount(-1)"
+              class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
+            <span id="manual-player-count" class="text-xl font-bold w-4 text-center">3</span>
+            <button onclick="adjustPlayerCount(1)"
+              class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-700 pt-3 flex justify-between items-center">
+          <div class="text-xs">
+            <span class="text-gray-400">當前牌數：</span>
+            <span id="selected-count" class="font-bold text-yellow-500">0</span>
+          </div>
+          <div class="text-xs">
+            <span class="text-gray-400">所需總牌數：</span>
+            <span id="target-card-count" class="font-bold text-blue-400">6</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="role-grid" class="grid grid-cols-3 gap-3 mb-24">
