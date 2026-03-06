@@ -6,7 +6,6 @@ const startBtn = document.getElementById('start-game');
 
 // 初始化渲染
 function init() {
-  // 依據夜間順序排序顯示，未選取者排在後面
   renderGrid();
   updateUI();
 }
@@ -17,7 +16,7 @@ function init() {
 function renderGrid() {
   roleGrid.innerHTML = '';
 
-  // 排序邏輯：按 order 排序
+  // 依據角色定義的 order 排序顯示
   const displayOrder = [...ROLES].sort((a, b) => a.order - b.order);
 
   displayOrder.forEach(role => {
@@ -26,7 +25,8 @@ function renderGrid() {
     const teamClass = role.team === 'wolf' ? 'bg-red-900/20' : 'bg-gray-800';
 
     const card = document.createElement('div');
-    card.className = `role-card relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 transition-all border-2 ${isActive ? 'border-yellow-500 bg-gray-700' : 'border-transparent ' + teamClass
+    // 根據是否選取切換邊框與背景色
+    card.className = `role-card relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 transition-all border-2 cursor-pointer ${isActive ? 'border-yellow-500 bg-gray-700' : 'border-transparent ' + teamClass
       }`;
 
     card.innerHTML = `
@@ -36,7 +36,7 @@ function renderGrid() {
       <div class="flex items-center mt-2 space-x-2">
         <button onclick="event.stopPropagation(); changeRoleCount('${role.id}', -1)" 
           class="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 text-white">-</button>
-        <span class="text-sm font-bold ${count > 0 ? 'text-yellow-500' : 'text-gray-400'}">${count}</span>
+        <span class="text-sm font-bold ${isActive ? 'text-yellow-500' : 'text-gray-400'}">${count}</span>
         <button onclick="event.stopPropagation(); changeRoleCount('${role.id}', 1)" 
           class="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 text-white">+</button>
       </div>
@@ -47,8 +47,20 @@ function renderGrid() {
       ${role.hasAction ? `<span class="absolute top-1 left-1 text-[8px] text-gray-500 font-mono">#${role.order}</span>` : ''}
     `;
 
-    // 點擊卡片本體預設 +1
-    card.onclick = () => changeRoleCount(role.id, 1);
+    /**
+     * 點擊卡片本體的特殊邏輯：
+     * 1. 如果目前沒選 (0)，點擊後變為 1。
+     * 2. 如果目前已選 (>0)，點擊後變為 0 (反選)。
+     */
+    card.onclick = () => {
+      if (count === 0) {
+        selectedRoles[role.id] = 1;
+      } else {
+        delete selectedRoles[role.id];
+      }
+      renderGrid();
+      updateUI();
+    };
 
     roleGrid.appendChild(card);
   });
@@ -66,7 +78,7 @@ function adjustPlayerCount(delta) {
 }
 
 /**
- * 增減特定角色數量
+ * 透過加減按鈕增減數量
  */
 function changeRoleCount(roleId, delta) {
   const currentCount = selectedRoles[roleId] || 0;
@@ -75,8 +87,6 @@ function changeRoleCount(roleId, delta) {
   if (newCount === 0) {
     delete selectedRoles[roleId];
   } else {
-    // 特殊限制：大部分有功能角色在遊戲中通常只有一張，除了狼人、守夜人、村民等
-    // 這裡暫不設限，讓使用者自由配置，但維持邏輯正確
     selectedRoles[roleId] = newCount;
   }
 
@@ -89,7 +99,7 @@ function changeRoleCount(roleId, delta) {
  */
 function updateUI() {
   const totalSelected = Object.values(selectedRoles).reduce((a, b) => a + b, 0);
-  const targetCount = playerCount + 3;
+  const targetCount = playerCount + 3; // 總牌數 = 人數 + 3
 
   document.getElementById('manual-player-count').innerText = playerCount;
   document.getElementById('selected-count').innerText = totalSelected;
@@ -115,7 +125,7 @@ function showGeneralRules() {
 【死亡判定】
 - 需 > 2 票且為最高票才死亡。
 - 若有多人同為最高票且 > 2 票，全部死亡。
-- 若全員皆為 1 票，無人死亡（判定場上無狼）。
+- 若全員皆為 1 票，無人死亡。
 
 【陣營勝負】
 - 死者包含狼人：村民陣營獲勝。
@@ -127,7 +137,7 @@ function showGeneralRules() {
 }
 
 /**
- * 透過 ID 顯示角色 Modal
+ * 顯示角色詳細規則
  */
 function showModalById(roleId) {
   const role = ROLES.find(r => r.id === roleId);
@@ -142,5 +152,4 @@ function closeModal() {
   document.getElementById('role-modal').classList.add('hidden');
 }
 
-// 執行初始化
 init();
