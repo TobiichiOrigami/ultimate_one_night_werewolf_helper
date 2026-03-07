@@ -2,6 +2,7 @@ let playerCount = 3;
 let selectedRoles = {};
 let isPlaying = false;
 let currentAudio = null;
+let timerInterval = null;
 
 const roleGrid = document.getElementById('role-grid');
 const startBtn = document.getElementById('start-game');
@@ -23,7 +24,7 @@ function init() {
 }
 
 /**
- * 點擊「開始遊戲」
+ * 點擊「開始遊戲」的處理邏輯
  */
 function handleStartGame() {
   if (isPlaying) return;
@@ -40,10 +41,72 @@ function handleStartGame() {
     isPlaying = false;
     updateUI();
 
+    // 語音結束後，開啟漂亮討論視窗並開始 8 分鐘倒數
     setTimeout(() => {
-      alert("夜晚結束，進入白天討論！");
-    }, 100);
+      startDiscussionTimer(8 * 60); // 8 分鐘 = 480 秒
+    }, 500);
   });
+}
+
+/**
+ * 啟動倒數計時器
+ * @param {number} duration 秒數
+ */
+function startDiscussionTimer(duration) {
+  const modal = document.getElementById('discussion-modal');
+  const display = document.getElementById('timer-display');
+
+  modal.classList.remove('hidden');
+  let timer = duration;
+
+  // 初始顯示
+  updateTimerText(display, timer);
+
+  timerInterval = setInterval(() => {
+    timer--;
+    updateTimerText(display, timer);
+
+    if (timer <= 0) {
+      clearInterval(timerInterval);
+      closeDiscussionModal();
+    }
+  }, 1000);
+}
+
+/**
+ * 更新計時器文字格式 (MM:SS)
+ */
+function updateTimerText(element, seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  element.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+  // 最後 30 秒變色提醒
+  if (seconds <= 30) {
+    element.classList.replace('text-white', 'text-red-500');
+  } else {
+    element.classList.remove('text-red-500');
+    element.classList.add('text-white');
+  }
+}
+
+/**
+ * 手動停止計時器 (提前結束按鈕)
+ */
+function stopTimerManually() {
+  if (confirm("確定要結束討論並進入投票嗎？")) {
+    clearInterval(timerInterval);
+    closeDiscussionModal();
+  }
+}
+
+/**
+ * 關閉討論視窗
+ */
+function closeDiscussionModal() {
+  document.getElementById('discussion-modal').classList.add('hidden');
+  // 恢復計時器文字顏色供下次使用
+  document.getElementById('timer-display').className = "text-7xl font-mono font-bold my-8 text-white tracking-tighter";
 }
 
 /**
