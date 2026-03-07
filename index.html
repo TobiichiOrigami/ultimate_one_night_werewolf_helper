@@ -157,13 +157,13 @@
       <h2 id="game-status-title" class="text-2xl font-bold mb-2 text-yellow-500">🌙 夜晚進行中...</h2>
 
       <div class="bg-gray-900/50 rounded-xl p-3 mb-4 text-left border border-gray-700">
-        <p class="text-xs text-gray-500 mb-2 border-b border-gray-700 pb-1">本局配置角色：</p>
-        <div id="game-role-list" class="grid grid-cols-2 gap-2 text-sm text-gray-300">
-        </div>
+        <div id="game-role-list" class="grid grid-cols-2 gap-2 text-sm text-gray-300"></div>
       </div>
 
-      <div id="timer-display" class="hidden text-7xl font-mono font-bold my-6 text-white tracking-tighter">
-        08:00
+      <div id="timer-label" class="text-xl font-bold text-blue-400 h-7 mb-2"></div>
+
+      <div id="timer-display"
+        class="text-7xl font-mono font-bold my-6 text-white tracking-tighter min-h-[80px] flex items-center justify-center">
       </div>
 
       <p id="game-status-desc" class="text-gray-300 mb-6">請聽從語音導覽指示行動</p>
@@ -173,7 +173,6 @@
           class="hidden w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">
           提前結束討論
         </button>
-
         <button onclick="abortGame()"
           class="w-full bg-gray-700 hover:bg-red-900 text-gray-400 hover:text-white py-2 rounded-lg text-sm transition">
           中止並重置遊戲

@@ -84,20 +84,48 @@ function handleStartGame() {
  * 隨時中止並重置遊戲
  */
 function abortGame() {
-  if (confirm("確定要中止目前的遊戲流程嗎？所有語音與計時將會停止。")) {
-    // 停止目前正在播放的語音
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio = null;
-    }
-    // 停止計時器
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-    // 隱藏 Modal 並恢復狀態
+  if (confirm("確定要中止目前的遊戲流程嗎？")) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    if (window.currentShortInterval) { clearInterval(window.currentShortInterval); }
+
+    // 清空所有顯示
+    document.getElementById('timer-display').innerText = "";
+    const labelEl = document.getElementById('timer-label');
+    if (labelEl) labelEl.innerText = "";
+
     closeGameModal();
   }
+}
+
+/**
+ * 行動倒數計時器
+ */
+function startShortTimer(ms, label, callback) {
+  const display = document.getElementById('timer-display');
+  const labelEl = document.getElementById('timer-label');
+  let secondsLeft = Math.floor(ms / 1000);
+
+  // 確保顯示容器不是隱藏的
+  display.classList.remove('hidden');
+
+  // 顯示標籤與初始秒數
+  if (labelEl) labelEl.innerText = label || "";
+  display.innerText = secondsLeft;
+
+  const shortInterval = setInterval(() => {
+    secondsLeft--;
+    if (secondsLeft <= 0) {
+      clearInterval(shortInterval);
+      display.innerText = "";
+      if (labelEl) labelEl.innerText = "";
+      callback();
+    } else {
+      display.innerText = secondsLeft;
+    }
+  }, 1000);
+
+  window.currentShortInterval = shortInterval;
 }
 
 /**
@@ -195,25 +223,31 @@ function generateNightQueue(selectedRoles) {
   activeRoles.forEach(role => {
     queue.push({ id: role.id, fileName: `${role.id}.mp3` });
 
-    // 設定：純觀察角色 (不需要觸碰卡牌)
+    // 判斷邏輯：除了守夜人與爪牙，其餘皆視為移動/看牌者
     const observationOnlyRoles = ['mason', 'minion'];
     const isObservationOnly = observationOnlyRoles.includes(role.id);
-
-    // 邏輯：除了純觀察角色外，其餘（包含看牌、換牌、化身）皆使用「移動卡牌等待時間」
     const waitTime = (isObservationOnly ? gameSettings.confirmSec : gameSettings.moveSec) * 1000;
 
-    queue.push({ id: 'pause', duration: waitTime });
+    // 插入等待項目，並帶上標籤
+    queue.push({
+      id: 'pause',
+      duration: waitTime,
+      label: `${role.name} 行動中`
+    });
+
     queue.push({ id: `${role.id}_sleep`, fileName: `${role.id}_sleep.mp3` });
     queue.push({ id: 'pause', duration: 1500 });
   });
 
-  // 3. 特殊邏輯：化身失眠者
-  // 化身失眠者需要拿起自己的牌查看，應視為「移動/觸碰卡牌」行為
+  // 化身失眠者特殊邏輯
   if (selectedRoles['doppelganger'] && selectedRoles['insomniac']) {
     queue.push({ id: 'app_insomniac', fileName: 'app_insomniac.mp3' });
-    queue.push({ id: 'pause', duration: gameSettings.moveSec * 1000 });
+    queue.push({
+      id: 'pause',
+      duration: gameSettings.moveSec * 1000,
+      label: "化身失眠者 行動中"
+    });
     queue.push({ id: 'doppelganger_sleep_2', fileName: 'doppelganger_sleep.mp3' });
-    queue.push({ id: 'pause', duration: 1500 });
   }
 
   // 4. 睜眼
@@ -241,7 +275,13 @@ function playNightFlow(queue, onComplete) {
     index++;
 
     if (item.id === 'pause') {
-      setTimeout(next, item.duration);
+      // 判斷是否需要顯示倒數（通常大於 2 秒的 pause 才是行動等待時間）
+      if (item.duration > 2000) {
+        startShortTimer(item.duration, item.label, next);
+      } else {
+        // 短暫間隔（如 1.5秒）則維持不顯示計時
+        setTimeout(next, item.duration);
+      }
     } else {
       currentAudio = new Audio(`assets/audio/${item.fileName}`);
       currentAudio.onended = next;
@@ -257,6 +297,7 @@ function playNightFlow(queue, onComplete) {
           setTimeout(next, 1000);
         });
       }
+      currentAudio.play().catch(e => setTimeout(next, 1000));
     }
   }
 
