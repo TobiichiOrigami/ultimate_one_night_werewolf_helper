@@ -9,6 +9,9 @@ let gameSettings = {
   confirmSec: 5,     // 秒
   moveSec: 8         // 秒
 };
+let bgmAudio = new Audio('assets/audio/bgm.mp3');
+bgmAudio.loop = true; // 設定循環播放
+bgmAudio.volume = 0.4;
 
 const roleGrid = document.getElementById('role-grid');
 const startBtn = document.getElementById('start-game');
@@ -39,6 +42,10 @@ function handleStartGame() {
   if (queue.length === 0) return;
 
   isPlaying = true;
+
+  // --- 新增：開始播放背景音樂 ---
+  bgmAudio.currentTime = 0; // 從頭開始
+  bgmAudio.play().catch(e => console.log("BGM 播放失敗 (需使用者交互):", e));
 
   // 1. 顯示遮罩
   const gameModal = document.getElementById('game-modal');
@@ -88,6 +95,9 @@ function abortGame() {
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (window.currentShortInterval) { clearInterval(window.currentShortInterval); }
+
+    // --- 新增：停止背景音樂 ---
+    bgmAudio.pause();
 
     // 清空所有顯示
     document.getElementById('timer-display').innerText = "";
@@ -175,6 +185,8 @@ function onTimerEnd() {
     // 播放「結束」語音
     const overAudio = new Audio('assets/audio/over.mp3');
     overAudio.onended = () => {
+      // --- 新增：語音導覽全部結束後，停止背景音樂 ---
+      bgmAudio.pause();
       // 全部結束後，關閉遮罩回到設定頁
       closeGameModal();
     };
