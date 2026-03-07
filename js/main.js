@@ -39,6 +39,11 @@ function init() {
 function handleStartGame() {
   if (isPlaying) return;
 
+  // --- 新增：確保上一局的殘留內容被清空 ---
+  stopRoleCarousel();
+  if (window.currentShortInterval) clearInterval(window.currentShortInterval);
+  if (timerInterval) clearInterval(timerInterval);
+
   const queue = generateNightQueue(selectedRoles);
   if (queue.length === 0) return;
 
@@ -104,20 +109,13 @@ function abortGame() {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (window.currentShortInterval) { clearInterval(window.currentShortInterval); }
 
-    // --- 新增：停止討論幻燈片 ---
-    if (discussionCarouselInterval) {
-      clearInterval(discussionCarouselInterval);
-      discussionCarouselInterval = null;
-    }
-
+    // 使用統一的清理函式
+    stopRoleCarousel();
     bgmAudio.pause();
 
     document.getElementById('timer-display').innerText = "";
     const labelEl = document.getElementById('timer-label');
     if (labelEl) labelEl.innerText = "";
-
-    // 恢復預設文字
-    document.getElementById('game-status-desc').innerText = "請聽從語音導覽指示行動";
 
     closeGameModal();
   }
@@ -155,6 +153,21 @@ function startRoleCarousel() {
 
   // 每 3 秒切換一次
   discussionCarouselInterval = setInterval(showNextRole, 3000);
+}
+
+/**
+ * 停止並清理角色幻燈片
+ */
+function stopRoleCarousel() {
+  if (discussionCarouselInterval) {
+    clearInterval(discussionCarouselInterval);
+    discussionCarouselInterval = null;
+  }
+  // 恢復預設文字，避免舊文字殘留
+  const statusDesc = document.getElementById('game-status-desc');
+  if (statusDesc) {
+    statusDesc.innerText = "請聽從語音導覽指示行動";
+  }
 }
 
 /**
@@ -218,7 +231,8 @@ function startDiscussionTimer(duration) {
   statusTitle.innerText = "☀️ 白天討論階段";
 
   // --- 新增：啟動角色幻燈片 ---
-  if (discussionCarouselInterval) clearInterval(discussionCarouselInterval);
+  // 先停止可能存在的舊輪播，再啟動新的
+  stopRoleCarousel();
   startRoleCarousel();
 
   timerInterval = setInterval(() => {
@@ -229,8 +243,7 @@ function startDiscussionTimer(duration) {
 
     if (--timer < 0) {
       clearInterval(timerInterval);
-      // 停止幻燈片
-      if (discussionCarouselInterval) clearInterval(discussionCarouselInterval);
+      stopRoleCarousel(); // 討論結束也要停止
       onTimerEnd();
     }
   }, 1000);
