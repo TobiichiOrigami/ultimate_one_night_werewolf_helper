@@ -26,65 +26,61 @@
       查看投票結算與平局規則
     </button>
 
-    <div class="bg-gray-800 p-4 rounded-xl mb-6 flex justify-between items-center">
-      <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-inner">
-        <div class="flex justify-between items-center mb-4">
-          <span class="text-sm text-gray-400 font-medium">遊戲玩家人數</span>
-          <div class="flex items-center space-x-4 bg-gray-700 rounded-lg p-1">
-            <button onclick="adjustPlayerCount(-1)"
-              class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
-            <span id="manual-player-count" class="text-xl font-bold w-4 text-center">3</span>
-            <button onclick="adjustPlayerCount(1)"
-              class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
-          </div>
-        </div>
-
-        <div class="border-t border-gray-700 pt-3 flex justify-between items-center">
-          <div class="text-xs">
-            <span class="text-gray-400">當前牌數：</span>
-            <span id="selected-count" class="font-bold text-yellow-500">0</span>
-          </div>
-          <div class="text-xs">
-            <span class="text-gray-400">所需總牌數：</span>
-            <span id="target-card-count" class="font-bold text-blue-400">6</span>
-          </div>
+    <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-inner grid grid-cols-2 gap-4">
+      <div class="col-span-2 border-b border-gray-700 pb-3">
+        <div class="text-xs text-gray-400 font-medium mb-2 text-center">遊戲玩家人數</div>
+        <div class="flex items-center justify-center space-x-6 bg-gray-700 rounded-lg p-2">
+          <button onclick="adjustPlayerCount(-1)"
+            class="w-10 h-10 flex items-center justify-center bg-gray-600 rounded-full hover:bg-gray-500 text-xl">-</button>
+          <span id="manual-player-count" class="text-2xl font-bold w-8 text-center text-white">3</span>
+          <button onclick="adjustPlayerCount(1)"
+            class="w-10 h-10 flex items-center justify-center bg-gray-600 rounded-full hover:bg-gray-500 text-xl">+</button>
         </div>
       </div>
 
-      <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-inner space-y-4">
-        <h3 class="text-sm text-gray-400 font-medium border-b border-gray-700 pb-2">⏳ 時間間隔設定</h3>
+      <h3 class="col-span-2 text-sm text-gray-400 font-medium text-center pt-1">⏳ 時間間隔設定</h3>
 
-        <div class="flex justify-between items-center">
-          <span class="text-xs text-gray-300">白天討論時間 (分)</span>
-          <div class="flex items-center space-x-3 bg-gray-700 rounded-lg p-1">
-            <button onclick="adjustTimeSetting('discussion', -1)"
-              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
-            <span id="setting-discussion" class="text-sm font-bold w-6 text-center text-yellow-500">8</span>
-            <button onclick="adjustTimeSetting('discussion', 1)"
-              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
-          </div>
+      <div class="flex flex-col items-center">
+        <span class="text-xs text-gray-300 mb-2">白天討論 (分)</span>
+        <div class="flex items-center space-x-2 bg-gray-700 rounded-lg p-1 w-full justify-between">
+          <button onclick="adjustTimeSetting('discussion', -1)"
+            class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
+          <span id="setting-discussion" class="text-sm font-bold text-yellow-500">8</span>
+          <button onclick="adjustTimeSetting('discussion', 1)"
+            class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
         </div>
+      </div>
 
-        <div class="flex justify-between items-center">
-          <span class="text-xs text-gray-300">睜眼認親等待 (秒)</span>
-          <div class="flex items-center space-x-3 bg-gray-700 rounded-lg p-1">
-            <button onclick="adjustTimeSetting('confirm', -1)"
-              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
-            <span id="setting-confirm" class="text-sm font-bold w-6 text-center text-blue-400">5</span>
-            <button onclick="adjustTimeSetting('confirm', 1)"
-              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
-          </div>
+      <div class="flex flex-col items-center">
+        <span class="text-xs text-gray-300 mb-2">睜眼認親 (秒)</span>
+        <div class="flex items-center space-x-2 bg-gray-700 rounded-lg p-1 w-full justify-between">
+          <button onclick="adjustTimeSetting('confirm', -1)"
+            class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
+          <span id="setting-confirm" class="text-sm font-bold text-blue-400">5</span>
+          <button onclick="adjustTimeSetting('confirm', 1)"
+            class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
         </div>
+      </div>
 
-        <div class="flex justify-between items-center">
-          <span class="text-xs text-gray-300">夜晚行動等待 (秒)</span>
-          <div class="flex items-center space-x-3 bg-gray-700 rounded-lg p-1">
-            <button onclick="adjustTimeSetting('move', -1)"
-              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
-            <span id="setting-move" class="text-sm font-bold w-6 text-center text-red-400">8</span>
-            <button onclick="adjustTimeSetting('move', 1)"
-              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
-          </div>
+      <div class="col-span-2 flex flex-col items-center pt-2">
+        <span class="text-xs text-gray-300 mb-2">夜晚行動 / 移動卡牌等待 (秒)</span>
+        <div class="flex items-center space-x-8 bg-gray-700 rounded-lg p-1 w-full max-w-[200px] justify-between">
+          <button onclick="adjustTimeSetting('move', -1)"
+            class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
+          <span id="setting-move" class="text-sm font-bold text-red-400">8</span>
+          <button onclick="adjustTimeSetting('move', 1)"
+            class="w-8 h-8 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
+        </div>
+      </div>
+
+      <div class="col-span-2 border-t border-gray-700 mt-2 pt-3 flex justify-around items-center">
+        <div class="text-center">
+          <p class="text-[10px] text-gray-400">當前牌數</p>
+          <span id="selected-count" class="font-bold text-yellow-500">0</span>
+        </div>
+        <div class="text-center">
+          <p class="text-[10px] text-gray-400">所需總牌數</p>
+          <span id="target-card-count" class="font-bold text-blue-400">6</span>
         </div>
       </div>
     </div>
