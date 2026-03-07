@@ -70,12 +70,16 @@ function handleStartGame() {
   gameModal.classList.remove('hidden');
   statusTitle.innerText = "🌙 夜晚進行中...";
   statusDesc.innerText = "請聽從語音導覽指示行動";
-  timerDisplay.classList.add('hidden');
+  timerDisplay.classList.remove('hidden');
+  timerDisplay.innerText = "";
   stopBtn.classList.add('hidden');
 
   // 2. 開始播放語音
   playNightFlow(queue, () => {
     statusTitle.innerText = "☀️ 白天討論階段";
+    // 立即顯示計時器容器，避免語音播放失敗時畫面卡死
+    timerDisplay.classList.remove('hidden');
+
     const discussAudio = new Audio('assets/audio/discuss.mp3');
     discussAudio.onended = () => {
       timerDisplay.classList.remove('hidden');
@@ -83,7 +87,10 @@ function handleStartGame() {
       // 改為讀取設定的分鐘數轉為秒數
       startDiscussionTimer(gameSettings.discussionMin * 60);
     };
-    discussAudio.play();
+    discussAudio.play().catch(() => {
+        // 如果音檔播放失敗，直接開始計時
+        startDiscussionTimer(gameSettings.discussionMin * 60);
+    });
   });
 }
 
@@ -109,17 +116,34 @@ function abortGame() {
 }
 
 /**
- * 行動倒數計時器
+ * 僅顯示角色圖片與標籤（不含倒數數字）
  */
-function startShortTimer(ms, label, callback) {
+function showActionUI(roleId, label) {
+  const labelEl = document.getElementById('timer-label');
+  const statusDesc = document.getElementById('game-status-desc');
+  const display = document.getElementById('timer-display');
+  const role = ROLES.find(r => r.id === roleId);
+
+  if (labelEl) labelEl.innerText = label || "";
+  display.innerText = ""; // 語音播放時不顯示數字
+
+  if (role && role.image) {
+    statusDesc.innerHTML = `<img src="${role.image}" class="w-32 h-32 object-cover rounded-full mx-auto mb-2 border-4 border-yellow-500 shadow-lg animate-pulse">`;
+  }
+}
+
+/**
+ * 修改後的倒數計時器（只負責跑數字）
+ */
+function startShortTimer(ms, roleId, label, callback) {
   const display = document.getElementById('timer-display');
   const labelEl = document.getElementById('timer-label');
+  const statusDesc = document.getElementById('game-status-desc');
   let secondsLeft = Math.floor(ms / 1000);
 
-  // 確保顯示容器不是隱藏的
   display.classList.remove('hidden');
 
-  // 顯示標籤與初始秒數
+  // 確保標籤顯示為「行動中」
   if (labelEl) labelEl.innerText = label || "";
   display.innerText = secondsLeft;
 
@@ -129,6 +153,7 @@ function startShortTimer(ms, label, callback) {
       clearInterval(shortInterval);
       display.innerText = "";
       if (labelEl) labelEl.innerText = "";
+      statusDesc.innerText = "請聽從語音導覽指示行動"; // 恢復預設文字
       callback();
     } else {
       display.innerText = secondsLeft;
@@ -235,14 +260,13 @@ function generateNightQueue(selectedRoles) {
   activeRoles.forEach(role => {
     queue.push({ id: role.id, fileName: `${role.id}.mp3` });
 
-    // 判斷邏輯：除了守夜人與爪牙，其餘皆視為移動/看牌者
     const observationOnlyRoles = ['mason', 'minion'];
     const isObservationOnly = observationOnlyRoles.includes(role.id);
     const waitTime = (isObservationOnly ? gameSettings.confirmSec : gameSettings.moveSec) * 1000;
 
-    // 插入等待項目，並帶上標籤
     queue.push({
       id: 'pause',
+      roleId: role.id, // 新增：傳遞角色 ID 用於顯示圖片
       duration: waitTime,
       label: `${role.name} 行動中`
     });
@@ -251,11 +275,12 @@ function generateNightQueue(selectedRoles) {
     queue.push({ id: 'pause', duration: 1500 });
   });
 
-  // 化身失眠者特殊邏輯
+  // 化身失眠者部分也要記得加
   if (selectedRoles['doppelganger'] && selectedRoles['insomniac']) {
     queue.push({ id: 'app_insomniac', fileName: 'app_insomniac.mp3' });
     queue.push({
       id: 'pause',
+      roleId: 'doppelganger', // 顯示化身幽靈的圖片
       duration: gameSettings.moveSec * 1000,
       label: "化身失眠者 行動中"
     });
@@ -270,6 +295,9 @@ function generateNightQueue(selectedRoles) {
 
 /**
  * 音檔播放器
+ */
+/**
+ * 修改後的夜間流程播放器
  */
 function playNightFlow(queue, onComplete) {
   let index = 0;
@@ -287,29 +315,34 @@ function playNightFlow(queue, onComplete) {
     index++;
 
     if (item.id === 'pause') {
-      // 判斷是否需要顯示倒數（通常大於 2 秒的 pause 才是行動等待時間）
+      // 遇到等待階段（倒數計時）
       if (item.duration > 2000) {
-        startShortTimer(item.duration, item.label, next);
+        // 傳入 roleId 和 label，此時開始數字倒數
+        startShortTimer(item.duration, item.roleId, item.label, next);
       } else {
-        // 短暫間隔（如 1.5秒）則維持不顯示計時
+        // 短暫 1.5 秒緩衝，不顯示任何東西
         setTimeout(next, item.duration);
       }
     } else {
+      // --- 核心修改：語音播放階段 ---
+      // 在播放語音的同時，就顯示角色頭像與名稱
+      const role = ROLES.find(r => r.id === item.id);
+      if (role) {
+        showActionUI(role.id, `${role.name} 行動請準備...`);
+      }
+
       currentAudio = new Audio(`assets/audio/${item.fileName}`);
-      currentAudio.onended = next;
-      currentAudio.onerror = () => {
-        console.warn(`音檔遺失: assets/audio/${item.fileName}，將於 1 秒後跳過...`);
-        setTimeout(next, 1000);
+
+      // 當語音結束時，才執行下一個步驟（即進入 queue 中的 pause 項目開始倒數）
+      currentAudio.onended = () => {
+        // 語音播完後，如果下一個是倒數，我們保持 UI 顯示，交給 startShortTimer 處理
+        next();
       };
 
-      const playPromise = currentAudio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("播放被攔截:", error);
-          setTimeout(next, 1000);
-        });
-      }
-      currentAudio.play().catch(e => setTimeout(next, 1000));
+      currentAudio.play().catch(e => {
+        console.error("播放失敗:", e);
+        setTimeout(next, 1000);
+      });
     }
   }
 
