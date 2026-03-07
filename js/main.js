@@ -9,6 +9,9 @@ let gameSettings = {
   confirmSec: 5,     // 秒
   moveSec: 8         // 秒
 };
+let bgmAudio = new Audio('assets/audio/bgm.mp3');
+bgmAudio.loop = true; // 設定循環播放
+bgmAudio.volume = 0.4;
 
 const roleGrid = document.getElementById('role-grid');
 const startBtn = document.getElementById('start-game');
@@ -39,6 +42,10 @@ function handleStartGame() {
   if (queue.length === 0) return;
 
   isPlaying = true;
+
+  // --- 新增：開始播放背景音樂 ---
+  bgmAudio.currentTime = 0; // 從頭開始
+  bgmAudio.play().catch(e => console.log("BGM 播放失敗 (需使用者交互):", e));
 
   // 1. 顯示遮罩
   const gameModal = document.getElementById('game-modal');
@@ -88,6 +95,9 @@ function abortGame() {
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (window.currentShortInterval) { clearInterval(window.currentShortInterval); }
+
+    // --- 新增：停止背景音樂 ---
+    bgmAudio.pause();
 
     // 清空所有顯示
     document.getElementById('timer-display').innerText = "";
@@ -175,6 +185,8 @@ function onTimerEnd() {
     // 播放「結束」語音
     const overAudio = new Audio('assets/audio/over.mp3');
     overAudio.onended = () => {
+      // --- 新增：語音導覽全部結束後，停止背景音樂 ---
+      bgmAudio.pause();
       // 全部結束後，關閉遮罩回到設定頁
       closeGameModal();
     };
@@ -328,8 +340,12 @@ function renderGrid() {
         </div>`
       : `<div class="mt-2 h-6 flex items-center"><span class="text-sm font-bold ${isActive ? 'text-yellow-500' : 'text-transparent'}">${isActive ? (config.default > 1 ? 'x' + count : '1') : ''}</span></div>`;
 
+    const roleImage = role.image ?
+      `<img src="${role.image}" class="w-16 h-16 object-cover rounded-full mb-1 border-2 border-gray-600">` :
+      `<div class="text-2xl mb-1 w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center">${role.hasAction ? '🌙' : '☀️'}</div>`;
+
     card.innerHTML = `
-      <div class="text-2xl mb-1">${role.hasAction ? '🌙' : '☀️'}</div>
+      ${roleImage}
       <div class="text-xs font-bold text-center">${role.name}</div>
       ${controlsHTML}
       <button onclick="event.stopPropagation(); showModalById('${role.id}')" class="absolute top-1 right-1 text-gray-500 text-xs p-1">ⓘ</button>
@@ -433,8 +449,17 @@ function closeRulesModal() {
 function showModalById(roleId) {
   const role = ROLES.find(r => r.id === roleId);
   if (role) {
+    const modalIcon = document.getElementById('modal-icon');
     document.getElementById('modal-name').innerText = role.name;
     document.getElementById('modal-desc').innerText = role.description;
+
+    // 如果有圖片就顯示圖片，沒有就顯示預設 Emoji
+    if (role.image) {
+      modalIcon.innerHTML = `<img src="${role.image}" class="w-full h-full object-cover rounded-full">`;
+    } else {
+      modalIcon.innerHTML = `👤`;
+    }
+
     document.getElementById('role-modal').classList.remove('hidden');
   }
 }

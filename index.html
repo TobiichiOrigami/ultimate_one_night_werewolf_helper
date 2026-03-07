@@ -102,12 +102,17 @@
   </div>
 
   <div id="role-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
-    <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-xs text-center">
+    <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-xs text-center border border-gray-700">
       <div id="modal-icon"
-        class="w-20 h-20 bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">👤</div>
-      <h2 id="modal-name" class="text-2xl font-bold mb-2">角色名稱</h2>
-      <p id="modal-desc" class="text-gray-300 mb-6">角色描述文字...</p>
-      <button onclick="closeModal()" class="bg-gray-600 px-6 py-2 rounded-lg">關閉</button>
+        class="w-24 h-24 bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl overflow-hidden border-4 border-yellow-500/50">
+        👤
+      </div>
+      <h2 id="modal-name" class="text-2xl font-bold mb-2 text-yellow-500">角色名稱</h2>
+      <p id="modal-desc" class="text-sm text-gray-300 mb-6 leading-relaxed">角色描述文字...</p>
+      <button onclick="closeModal()"
+        class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg transition">
+        關閉
+      </button>
     </div>
   </div>
 
