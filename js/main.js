@@ -175,15 +175,17 @@ function closeGameModal() {
 }
 
 /**
- * 生成夜間流程隊列 (包含新增語音)
+ * 生成夜間流程隊列
+ * 邏輯調整：除了純觀察角色(守夜人、爪牙)外，其餘皆視為需要移動/觸碰卡牌者
  */
 function generateNightQueue(selectedRoles) {
   let queue = [];
 
-  // 1. 開場 (省略部分...)
+  // 1. 開場與確認身份
   queue.push({ id: 'start', fileName: 'start.mp3' });
   queue.push({ id: 'pause', duration: 3000 });
   queue.push({ id: 'sleep_all', fileName: 'sleep_all.mp3' });
+  queue.push({ id: 'pause', duration: 1500 });
 
   // 2. 行動角色
   const activeRoles = ROLES
@@ -193,27 +195,30 @@ function generateNightQueue(selectedRoles) {
   activeRoles.forEach(role => {
     queue.push({ id: role.id, fileName: `${role.id}.mp3` });
 
-    // 判斷該角色是否涉及移動/交換卡牌
-    // 涉及移動的角色：化身幽靈、狼王、強盜、搗蛋鬼、酒鬼
-    const moveActionRoles = ['doppelganger', 'alpha_wolf', 'robber', 'troublemaker', 'drunk'];
-    const isMoveAction = moveActionRoles.includes(role.id);
+    // 設定：純觀察角色 (不需要觸碰卡牌)
+    const observationOnlyRoles = ['mason', 'minion'];
+    const isObservationOnly = observationOnlyRoles.includes(role.id);
 
-    // 根據設定讀取秒數 (轉為毫秒)
-    const waitTime = (isMoveAction ? gameSettings.moveSec : gameSettings.confirmSec) * 1000;
+    // 邏輯：除了純觀察角色外，其餘（包含看牌、換牌、化身）皆使用「移動卡牌等待時間」
+    const waitTime = (isObservationOnly ? gameSettings.confirmSec : gameSettings.moveSec) * 1000;
 
     queue.push({ id: 'pause', duration: waitTime });
     queue.push({ id: `${role.id}_sleep`, fileName: `${role.id}_sleep.mp3` });
     queue.push({ id: 'pause', duration: 1500 });
   });
 
-  // 3. 特殊邏輯：化身失眠者 (此處亦可視為確認身份類)
+  // 3. 特殊邏輯：化身失眠者
+  // 化身失眠者需要拿起自己的牌查看，應視為「移動/觸碰卡牌」行為
   if (selectedRoles['doppelganger'] && selectedRoles['insomniac']) {
     queue.push({ id: 'app_insomniac', fileName: 'app_insomniac.mp3' });
-    queue.push({ id: 'pause', duration: gameSettings.confirmSec * 1000 });
+    queue.push({ id: 'pause', duration: gameSettings.moveSec * 1000 });
     queue.push({ id: 'doppelganger_sleep_2', fileName: 'doppelganger_sleep.mp3' });
+    queue.push({ id: 'pause', duration: 1500 });
   }
 
+  // 4. 睜眼
   queue.push({ id: 'wake_up', fileName: 'wake_up.mp3' });
+
   return queue;
 }
 
