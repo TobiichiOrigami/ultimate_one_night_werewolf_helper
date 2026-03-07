@@ -50,6 +50,43 @@
           </div>
         </div>
       </div>
+
+      <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-inner space-y-4">
+        <h3 class="text-sm text-gray-400 font-medium border-b border-gray-700 pb-2">⏳ 時間間隔設定</h3>
+
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-300">白天討論時間 (分)</span>
+          <div class="flex items-center space-x-3 bg-gray-700 rounded-lg p-1">
+            <button onclick="adjustTimeSetting('discussion', -1)"
+              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
+            <span id="setting-discussion" class="text-sm font-bold w-6 text-center text-yellow-500">8</span>
+            <button onclick="adjustTimeSetting('discussion', 1)"
+              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-300">確認身份等待 (秒)</span>
+          <div class="flex items-center space-x-3 bg-gray-700 rounded-lg p-1">
+            <button onclick="adjustTimeSetting('confirm', -1)"
+              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
+            <span id="setting-confirm" class="text-sm font-bold w-6 text-center text-blue-400">5</span>
+            <button onclick="adjustTimeSetting('confirm', 1)"
+              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-300">移動卡牌等待 (秒)</span>
+          <div class="flex items-center space-x-3 bg-gray-700 rounded-lg p-1">
+            <button onclick="adjustTimeSetting('move', -1)"
+              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">-</button>
+            <span id="setting-move" class="text-sm font-bold w-6 text-center text-red-400">8</span>
+            <button onclick="adjustTimeSetting('move', 1)"
+              class="w-7 h-7 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500">+</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="role-grid" class="grid grid-cols-3 gap-3 mb-24">

@@ -3,6 +3,12 @@ let selectedRoles = {};
 let isPlaying = false;
 let currentAudio = null;
 let timerInterval = null;
+// 儲存時間設定
+let gameSettings = {
+  discussionMin: 8,  // 分鐘
+  confirmSec: 5,     // 秒
+  moveSec: 8         // 秒
+};
 
 const roleGrid = document.getElementById('role-grid');
 const startBtn = document.getElementById('start-game');
@@ -63,12 +69,12 @@ function handleStartGame() {
   // 2. 開始播放語音
   playNightFlow(queue, () => {
     statusTitle.innerText = "☀️ 白天討論階段";
-    // (後續討論語音與計時器邏輯維持不變...)
     const discussAudio = new Audio('assets/audio/discuss.mp3');
     discussAudio.onended = () => {
       timerDisplay.classList.remove('hidden');
       stopBtn.classList.remove('hidden');
-      startDiscussionTimer(8 * 60);
+      // 改為讀取設定的分鐘數轉為秒數
+      startDiscussionTimer(gameSettings.discussionMin * 60);
     };
     discussAudio.play();
   });
@@ -174,36 +180,40 @@ function closeGameModal() {
 function generateNightQueue(selectedRoles) {
   let queue = [];
 
-  // 1. 開場與確認身份
+  // 1. 開場 (省略部分...)
   queue.push({ id: 'start', fileName: 'start.mp3' });
   queue.push({ id: 'pause', duration: 3000 });
   queue.push({ id: 'sleep_all', fileName: 'sleep_all.mp3' });
-  queue.push({ id: 'pause', duration: 1500 });
 
-  // 2. 行動角色 (依照 ROLES 順序)
+  // 2. 行動角色
   const activeRoles = ROLES
     .filter(r => selectedRoles[r.id] > 0 && r.hasAction)
     .sort((a, b) => a.order - b.order);
 
   activeRoles.forEach(role => {
     queue.push({ id: role.id, fileName: `${role.id}.mp3` });
-    const waitTime = 8000;
+
+    // 判斷該角色是否涉及移動/交換卡牌
+    // 涉及移動的角色：化身幽靈、狼王、強盜、搗蛋鬼、酒鬼
+    const moveActionRoles = ['doppelganger', 'alpha_wolf', 'robber', 'troublemaker', 'drunk'];
+    const isMoveAction = moveActionRoles.includes(role.id);
+
+    // 根據設定讀取秒數 (轉為毫秒)
+    const waitTime = (isMoveAction ? gameSettings.moveSec : gameSettings.confirmSec) * 1000;
+
     queue.push({ id: 'pause', duration: waitTime });
     queue.push({ id: `${role.id}_sleep`, fileName: `${role.id}_sleep.mp3` });
     queue.push({ id: 'pause', duration: 1500 });
   });
 
-  // 3. 特殊邏輯：化身失眠者
+  // 3. 特殊邏輯：化身失眠者 (此處亦可視為確認身份類)
   if (selectedRoles['doppelganger'] && selectedRoles['insomniac']) {
     queue.push({ id: 'app_insomniac', fileName: 'app_insomniac.mp3' });
-    queue.push({ id: 'pause', duration: 4000 });
+    queue.push({ id: 'pause', duration: gameSettings.confirmSec * 1000 });
     queue.push({ id: 'doppelganger_sleep_2', fileName: 'doppelganger_sleep.mp3' });
-    queue.push({ id: 'pause', duration: 1500 });
   }
 
-  // 4. 睜眼
   queue.push({ id: 'wake_up', fileName: 'wake_up.mp3' });
-
   return queue;
 }
 
@@ -337,6 +347,24 @@ function adjustPlayerCount(delta) {
   if (newCount >= 3 && newCount <= 10) {
     playerCount = newCount;
     updateUI();
+  }
+}
+
+/**
+ * 調整時間設定的數值
+ */
+function adjustTimeSetting(type, delta) {
+  if (isPlaying) return;
+
+  if (type === 'discussion') {
+    gameSettings.discussionMin = Math.max(1, Math.min(20, gameSettings.discussionMin + delta));
+    document.getElementById('setting-discussion').innerText = gameSettings.discussionMin;
+  } else if (type === 'confirm') {
+    gameSettings.confirmSec = Math.max(3, Math.min(20, gameSettings.confirmSec + delta));
+    document.getElementById('setting-confirm').innerText = gameSettings.confirmSec;
+  } else if (type === 'move') {
+    gameSettings.moveSec = Math.max(3, Math.min(20, gameSettings.moveSec + delta));
+    document.getElementById('setting-move').innerText = gameSettings.moveSec;
   }
 }
 
