@@ -11,7 +11,7 @@ const ROLES = [
   { id: 'robber', name: '強盜', team: 'villager', order: 9, hasAction: true, description: '交換自己與另一名玩家的牌，並查看新牌。' },
   { id: 'troublemaker', name: '搗蛋鬼', team: 'villager', order: 10, hasAction: true, description: '交換另外兩名玩家的牌（不能看牌）。' },
   { id: 'drunk', name: '酒鬼', team: 'villager', order: 11, hasAction: true, description: '將自己的牌與中央的一張牌交換（不准看牌）。' },
-  { id: 'insomniac', name: '失眠者', team: 'villager', order: 12, hasAction: true, description: '查看自己目前的牌。' },
+  { id: 'insomniac', name: '失眠者', team: 'villager', order: 12, hasAction: true, description: '夜晚結束前，查看自己目前的牌。' },
 
   // --- 夜間不行動角色 ---
   { id: 'villager', name: '村民', team: 'villager', order: 99, hasAction: false, description: '無特殊能力，屬於正義陣營。' },
