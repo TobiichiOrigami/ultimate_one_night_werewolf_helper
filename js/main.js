@@ -34,12 +34,25 @@ function handleStartGame() {
 
   isPlaying = true;
 
-  // 1. 顯示遮罩，擋住設定界面
+  // 1. 顯示遮罩
   const gameModal = document.getElementById('game-modal');
   const statusTitle = document.getElementById('game-status-title');
   const statusDesc = document.getElementById('game-status-desc');
   const timerDisplay = document.getElementById('timer-display');
   const stopBtn = document.getElementById('stop-timer-btn');
+  const roleListContainer = document.getElementById('game-role-list');
+
+  // 動態生成目前選中的角色清單供玩家查看
+  roleListContainer.innerHTML = '';
+  Object.entries(selectedRoles).forEach(([roleId, count]) => {
+    const role = ROLES.find(r => r.id === roleId);
+    if (role && count > 0) {
+      const item = document.createElement('div');
+      item.className = "flex justify-between border-b border-gray-800 pb-1";
+      item.innerHTML = `<span>${role.name}</span><span class="text-yellow-500 font-bold">x${count}</span>`;
+      roleListContainer.appendChild(item);
+    }
+  });
 
   gameModal.classList.remove('hidden');
   statusTitle.innerText = "🌙 夜晚進行中...";
@@ -49,19 +62,36 @@ function handleStartGame() {
 
   // 2. 開始播放語音
   playNightFlow(queue, () => {
-    // 當夜晚所有流程（含 wake_up）播完後，進入討論階段
     statusTitle.innerText = "☀️ 白天討論階段";
-
-    // 播放「討論導覽」語音
+    // (後續討論語音與計時器邏輯維持不變...)
     const discussAudio = new Audio('assets/audio/discuss.mp3');
     discussAudio.onended = () => {
-      // 導覽播完後，才顯示計時器並開始倒數
       timerDisplay.classList.remove('hidden');
       stopBtn.classList.remove('hidden');
       startDiscussionTimer(8 * 60);
     };
     discussAudio.play();
   });
+}
+
+/**
+ * 隨時中止並重置遊戲
+ */
+function abortGame() {
+  if (confirm("確定要中止目前的遊戲流程嗎？所有語音與計時將會停止。")) {
+    // 停止目前正在播放的語音
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+    // 停止計時器
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    // 隱藏 Modal 並恢復狀態
+    closeGameModal();
+  }
 }
 
 /**
