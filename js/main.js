@@ -12,6 +12,7 @@ let gameSettings = {
 let bgmAudio = new Audio('assets/audio/bgm.mp3');
 bgmAudio.loop = true; // 設定循環播放
 bgmAudio.volume = 0.4;
+let discussionCarouselInterval = null; // 儲存幻燈片計時器
 
 const roleGrid = document.getElementById('role-grid');
 const startBtn = document.getElementById('start-game');
@@ -88,8 +89,8 @@ function handleStartGame() {
       startDiscussionTimer(gameSettings.discussionMin * 60);
     };
     discussAudio.play().catch(() => {
-        // 如果音檔播放失敗，直接開始計時
-        startDiscussionTimer(gameSettings.discussionMin * 60);
+      // 如果音檔播放失敗，直接開始計時
+      startDiscussionTimer(gameSettings.discussionMin * 60);
     });
   });
 }
@@ -103,16 +104,57 @@ function abortGame() {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (window.currentShortInterval) { clearInterval(window.currentShortInterval); }
 
-    // --- 新增：停止背景音樂 ---
+    // --- 新增：停止討論幻燈片 ---
+    if (discussionCarouselInterval) {
+      clearInterval(discussionCarouselInterval);
+      discussionCarouselInterval = null;
+    }
+
     bgmAudio.pause();
 
-    // 清空所有顯示
     document.getElementById('timer-display').innerText = "";
     const labelEl = document.getElementById('timer-label');
     if (labelEl) labelEl.innerText = "";
 
+    // 恢復預設文字
+    document.getElementById('game-status-desc').innerText = "請聽從語音導覽指示行動";
+
     closeGameModal();
   }
+}
+
+/**
+ * 啟動討論階段的角色大頭貼幻燈片
+ */
+function startRoleCarousel() {
+  const statusDesc = document.getElementById('game-status-desc');
+
+  // 取得本局有選中的角色清單 (排除數量為 0 的)
+  const activeRoles = ROLES.filter(role => selectedRoles[role.id] > 0);
+
+  if (activeRoles.length === 0) return;
+
+  let currentIndex = 0;
+
+  // 定義顯示函式
+  const showNextRole = () => {
+    const role = activeRoles[currentIndex];
+    if (role && role.image) {
+      statusDesc.innerHTML = `
+        <div class="flex flex-col items-center animate-fade-in">
+          <img src="${role.image}" class="w-32 h-32 object-cover rounded-full border-4 border-green-500 shadow-lg mb-2 animate-pulse">
+          <p class="text-green-400 font-bold text-lg">${role.name}</p>
+        </div>
+      `;
+    }
+    currentIndex = (currentIndex + 1) % activeRoles.length;
+  };
+
+  // 立即顯示第一個
+  showNextRole();
+
+  // 每 3 秒切換一次
+  discussionCarouselInterval = setInterval(showNextRole, 3000);
 }
 
 /**
@@ -167,18 +209,29 @@ function startShortTimer(ms, roleId, label, callback) {
  * 啟動倒數計時器
  */
 function startDiscussionTimer(duration) {
-  const display = document.getElementById('timer-display');
   let timer = duration;
+  const display = document.getElementById('timer-display');
+  const statusTitle = document.getElementById('game-status-title');
+  const labelEl = document.getElementById('timer-label');
 
-  updateTimerText(display, timer);
+  labelEl.innerText = "🗣️ 自由討論中";
+  statusTitle.innerText = "☀️ 白天討論階段";
+
+  // --- 新增：啟動角色幻燈片 ---
+  if (discussionCarouselInterval) clearInterval(discussionCarouselInterval);
+  startRoleCarousel();
 
   timerInterval = setInterval(() => {
-    timer--;
-    updateTimerText(display, timer);
+    let minutes = Math.floor(timer / 60);
+    let seconds = timer % 60;
 
-    if (timer <= 0) {
+    display.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    if (--timer < 0) {
       clearInterval(timerInterval);
-      onTimerEnd(); // 觸發結束語音
+      // 停止幻燈片
+      if (discussionCarouselInterval) clearInterval(discussionCarouselInterval);
+      onTimerEnd();
     }
   }, 1000);
 }
