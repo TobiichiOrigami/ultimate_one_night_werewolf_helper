@@ -24,7 +24,7 @@ function init() {
 }
 
 /**
- * 點擊「開始遊戲」的處理邏輯
+ * 點擊「開始遊戲」
  */
 function handleStartGame() {
   if (isPlaying) return;
@@ -33,33 +33,44 @@ function handleStartGame() {
   if (queue.length === 0) return;
 
   isPlaying = true;
-  startBtn.innerText = "🌙 語音引導中...";
-  startBtn.disabled = true;
-  startBtn.classList.replace('bg-green-600', 'bg-indigo-900');
 
+  // 1. 顯示遮罩，擋住設定界面
+  const gameModal = document.getElementById('game-modal');
+  const statusTitle = document.getElementById('game-status-title');
+  const statusDesc = document.getElementById('game-status-desc');
+  const timerDisplay = document.getElementById('timer-display');
+  const stopBtn = document.getElementById('stop-timer-btn');
+
+  gameModal.classList.remove('hidden');
+  statusTitle.innerText = "🌙 夜晚進行中...";
+  statusDesc.innerText = "請聽從語音導覽指示行動";
+  timerDisplay.classList.add('hidden');
+  stopBtn.classList.add('hidden');
+
+  // 2. 開始播放語音
   playNightFlow(queue, () => {
-    isPlaying = false;
-    updateUI();
+    // 當夜晚所有流程（含 wake_up）播完後，進入討論階段
+    statusTitle.innerText = "☀️ 白天討論階段";
 
-    // 語音結束後，開啟漂亮討論視窗並開始 8 分鐘倒數
-    setTimeout(() => {
-      startDiscussionTimer(8 * 60); // 8 分鐘 = 480 秒
-    }, 500);
+    // 播放「討論導覽」語音
+    const discussAudio = new Audio('assets/audio/discuss.mp3');
+    discussAudio.onended = () => {
+      // 導覽播完後，才顯示計時器並開始倒數
+      timerDisplay.classList.remove('hidden');
+      stopBtn.classList.remove('hidden');
+      startDiscussionTimer(8 * 60);
+    };
+    discussAudio.play();
   });
 }
 
 /**
  * 啟動倒數計時器
- * @param {number} duration 秒數
  */
 function startDiscussionTimer(duration) {
-  const modal = document.getElementById('discussion-modal');
   const display = document.getElementById('timer-display');
-
-  modal.classList.remove('hidden');
   let timer = duration;
 
-  // 初始顯示
   updateTimerText(display, timer);
 
   timerInterval = setInterval(() => {
@@ -68,7 +79,7 @@ function startDiscussionTimer(duration) {
 
     if (timer <= 0) {
       clearInterval(timerInterval);
-      closeDiscussionModal();
+      onTimerEnd(); // 觸發結束語音
     }
   }, 1000);
 }
@@ -91,64 +102,76 @@ function updateTimerText(element, seconds) {
 }
 
 /**
+ * 討論結束後的邏輯
+ */
+function onTimerEnd() {
+  // 播放「投票」語音
+  const voteAudio = new Audio('assets/audio/vote.mp3');
+  voteAudio.onended = () => {
+    // 播放「結束」語音
+    const overAudio = new Audio('assets/audio/over.mp3');
+    overAudio.onended = () => {
+      // 全部結束後，關閉遮罩回到設定頁
+      closeGameModal();
+    };
+    overAudio.play();
+  };
+  voteAudio.play();
+}
+
+/**
  * 手動停止計時器 (提前結束按鈕)
  */
 function stopTimerManually() {
   if (confirm("確定要結束討論並進入投票嗎？")) {
     clearInterval(timerInterval);
-    closeDiscussionModal();
+    onTimerEnd();
   }
 }
 
 /**
  * 關閉討論視窗
  */
-function closeDiscussionModal() {
-  document.getElementById('discussion-modal').classList.add('hidden');
-  // 恢復計時器文字顏色供下次使用
-  document.getElementById('timer-display').className = "text-7xl font-mono font-bold my-8 text-white tracking-tighter";
+function closeGameModal() {
+  isPlaying = false;
+  document.getElementById('game-modal').classList.add('hidden');
+  updateUI();
 }
 
 /**
- * 生成夜間流程隊列
- * 修正重點：僅在「同時擁有化身幽靈與失眠者」時，才播放化身失眠者語音
+ * 生成夜間流程隊列 (包含新增語音)
  */
 function generateNightQueue(selectedRoles) {
   let queue = [];
 
-  // 1. 開場：所有人閉眼
+  // 1. 開場與確認身份
+  queue.push({ id: 'start', fileName: 'start.mp3' });
+  queue.push({ id: 'pause', duration: 3000 });
   queue.push({ id: 'sleep_all', fileName: 'sleep_all.mp3' });
   queue.push({ id: 'pause', duration: 1500 });
 
-  // 2. 行動角色 (依照 ROLES 定義的順序)
+  // 2. 行動角色 (依照 ROLES 順序)
   const activeRoles = ROLES
     .filter(r => selectedRoles[r.id] > 0 && r.hasAction)
     .sort((a, b) => a.order - b.order);
 
   activeRoles.forEach(role => {
-    // 睜眼指令
     queue.push({ id: role.id, fileName: `${role.id}.mp3` });
-
-    // 行動等待時間 (化身幽靈台詞較長，給予較多時間)
     const waitTime = 8000;
     queue.push({ id: 'pause', duration: waitTime });
-
-    // 閉眼指令
     queue.push({ id: `${role.id}_sleep`, fileName: `${role.id}_sleep.mp3` });
     queue.push({ id: 'pause', duration: 1500 });
   });
 
-  // 3. 特殊邏輯修正：化身失眠者
-  // 只有當「化身幽靈」和「失眠者」同時被選中時，才播放此段語音
+  // 3. 特殊邏輯：化身失眠者
   if (selectedRoles['doppelganger'] && selectedRoles['insomniac']) {
     queue.push({ id: 'app_insomniac', fileName: 'app_insomniac.mp3' });
     queue.push({ id: 'pause', duration: 4000 });
-    // 播放化身幽靈第二次閉眼語音
     queue.push({ id: 'doppelganger_sleep_2', fileName: 'doppelganger_sleep.mp3' });
     queue.push({ id: 'pause', duration: 1500 });
   }
 
-  // 4. 結尾：所有人睜眼
+  // 4. 睜眼
   queue.push({ id: 'wake_up', fileName: 'wake_up.mp3' });
 
   return queue;

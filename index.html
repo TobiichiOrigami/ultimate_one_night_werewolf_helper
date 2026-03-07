@@ -74,19 +74,21 @@
     </div>
   </div>
 
-  <div id="discussion-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-6 z-50">
-    <div class="bg-gray-800 rounded-3xl p-8 w-full max-w-sm text-center border-2 border-yellow-500 shadow-2xl">
-      <h2 class="text-2xl font-bold mb-4 text-yellow-500">☀️ 白天討論階段</h2>
-      <div id="timer-display" class="text-7xl font-mono font-bold my-8 text-white tracking-tighter">
-        08:00
-      </div>
-      <p class="text-gray-400 mb-6">請各位玩家開始討論並準備投票</p>
-      <button onclick="stopTimerManually()"
-        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition">
-        提前結束討論
-      </button>
+<div id="game-modal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-6 z-50">
+  <div class="bg-gray-800 rounded-3xl p-8 w-full max-w-sm text-center border-2 border-yellow-500 shadow-2xl">
+    <h2 id="game-status-title" class="text-2xl font-bold mb-4 text-yellow-500">🌙 夜晚進行中...</h2>
+    
+    <div id="timer-display" class="hidden text-7xl font-mono font-bold my-8 text-white tracking-tighter">
+      08:00
     </div>
+
+    <p id="game-status-desc" class="text-gray-300 mb-6">請聽從語音導覽指示行動</p>
+    
+    <button id="stop-timer-btn" onclick="stopTimerManually()" class="hidden w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition">
+      提前結束討論
+    </button>
   </div>
+</div>
 
   <script src="js/characters.js"></script>
   <script src="js/main.js"></script>
