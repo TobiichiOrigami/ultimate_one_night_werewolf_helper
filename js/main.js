@@ -310,9 +310,20 @@ function adjustPlayerCount(delta) {
   }
 }
 
+/**
+ * 顯示通用規則說明 Modal
+ */
 function showGeneralRules() {
-  const ruleContent = `【死亡判定】\n- 需 > 2 票且為最高票才死亡。\n- 若有多人最高票且 > 2 票，全部死亡。\n- 若全員皆為 1 票，無人死亡。\n\n【陣營勝負】\n- 死者含狼人：村民獲勝。\n- 死者不含狼人：狼人獲勝。`;
-  alert(ruleContent);
+  const rulesModal = document.getElementById('rules-modal');
+  rulesModal.classList.remove('hidden');
+}
+
+/**
+ * 關閉規則說明 Modal
+ */
+function closeRulesModal() {
+  const rulesModal = document.getElementById('rules-modal');
+  rulesModal.classList.add('hidden');
 }
 
 function showModalById(roleId) {

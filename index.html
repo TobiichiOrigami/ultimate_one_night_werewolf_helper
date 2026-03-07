@@ -74,21 +74,62 @@
     </div>
   </div>
 
-<div id="game-modal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-6 z-50">
-  <div class="bg-gray-800 rounded-3xl p-8 w-full max-w-sm text-center border-2 border-yellow-500 shadow-2xl">
-    <h2 id="game-status-title" class="text-2xl font-bold mb-4 text-yellow-500">🌙 夜晚進行中...</h2>
-    
-    <div id="timer-display" class="hidden text-7xl font-mono font-bold my-8 text-white tracking-tighter">
-      08:00
-    </div>
+  <div id="rules-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+    <div
+      class="bg-gray-800 rounded-2xl p-6 w-full max-w-sm border border-gray-700 shadow-2xl overflow-y-auto max-h-[80vh]">
+      <div class="text-yellow-500 text-3xl mb-4 text-center">⚖️</div>
+      <h2 class="text-2xl font-bold mb-4 text-center text-yellow-500">投票結算與平局規則</h2>
 
-    <p id="game-status-desc" class="text-gray-300 mb-6">請聽從語音導覽指示行動</p>
-    
-    <button id="stop-timer-btn" onclick="stopTimerManually()" class="hidden w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition">
-      提前結束討論
-    </button>
+      <div class="space-y-4 text-sm text-gray-200 leading-relaxed">
+        <section>
+          <h3 class="font-bold text-blue-400 border-b border-gray-700 pb-1 mb-2">1. 死亡判定準則</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>多數決：</strong>獲得最高票且票數 <span class="text-yellow-500">> 2 票</span> 的玩家被處死。</li>
+            <li><strong>平局判定：</strong>若有多名玩家同時獲得最高票（且皆 > 2 票），則所有最高票者同時死亡。</li>
+            <li><strong>全體平票 (1 票)：</strong>若所有玩家都只獲得 1 票，則無人死亡（判定無狼）。</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="font-bold text-blue-400 border-b border-gray-700 pb-1 mb-2">2. 陣營勝負判定</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>死者中包含至少一名狼人：<span class="text-green-400">村民獲勝</span>。</li>
+            <li>死者不含狼人：<span class="text-red-400">狼人獲勝</span>。</li>
+            <li>無人死亡且場上無狼：<span class="text-green-400">村民獲勝</span>。</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="font-bold text-blue-400 border-b border-gray-700 pb-1 mb-2">3. 特殊角色影響</h3>
+          <p><strong>🛡 王子：</strong>免疫死亡。若獲最高票，他不會死亡。</p>
+          <p><strong>🏹 獵人：</strong>臨死反擊。若死亡，他指向的玩家也立即死亡。</p>
+          <p><strong>🧤 皮匠：</strong>獨立勝負。只有在自己死亡時才會獲勝。</p>
+        </section>
+      </div>
+
+      <button onclick="closeRulesModal()"
+        class="w-full mt-6 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition">
+        關閉
+      </button>
+    </div>
   </div>
-</div>
+
+  <div id="game-modal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-6 z-50">
+    <div class="bg-gray-800 rounded-3xl p-8 w-full max-w-sm text-center border-2 border-yellow-500 shadow-2xl">
+      <h2 id="game-status-title" class="text-2xl font-bold mb-4 text-yellow-500">🌙 夜晚進行中...</h2>
+
+      <div id="timer-display" class="hidden text-7xl font-mono font-bold my-8 text-white tracking-tighter">
+        08:00
+      </div>
+
+      <p id="game-status-desc" class="text-gray-300 mb-6">請聽從語音導覽指示行動</p>
+
+      <button id="stop-timer-btn" onclick="stopTimerManually()"
+        class="hidden w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition">
+        提前結束討論
+      </button>
+    </div>
+  </div>
 
   <script src="js/characters.js"></script>
   <script src="js/main.js"></script>
