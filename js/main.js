@@ -13,6 +13,7 @@ let bgmAudio = new Audio('assets/audio/bgm.mp3');
 bgmAudio.loop = true; // 設定循環播放
 bgmAudio.volume = 0.4;
 let discussionCarouselInterval = null; // 儲存幻燈片計時器
+let previewAudio = null; // 用於管理試聽音訊
 
 const roleGrid = document.getElementById('role-grid');
 const startBtn = document.getElementById('start-game');
@@ -43,6 +44,7 @@ function handleStartGame() {
   stopRoleCarousel();
   if (window.currentShortInterval) clearInterval(window.currentShortInterval);
   if (timerInterval) clearInterval(timerInterval);
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; } // 確保語音停止
 
   const queue = generateNightQueue(selectedRoles);
   if (queue.length === 0) return;
@@ -58,8 +60,22 @@ function handleStartGame() {
   const statusTitle = document.getElementById('game-status-title');
   const statusDesc = document.getElementById('game-status-desc');
   const timerDisplay = document.getElementById('timer-display');
+  const labelEl = document.getElementById('timer-label'); // 新增取得標籤元素
   const stopBtn = document.getElementById('stop-timer-btn');
   const roleListContainer = document.getElementById('game-role-list');
+
+  // --- 重置 UI 顯示文字 ---
+  gameModal.classList.remove('hidden');
+  statusTitle.innerText = "🌙 夜晚進行中..."; 
+  statusDesc.innerText = "請聽從語音導覽指示行動";
+  if (labelEl) labelEl.innerText = ""; // 👈 徹底清除上一局殘留的「自由討論中」
+  
+  timerDisplay.classList.remove('hidden');
+  timerDisplay.innerText = ""; 
+  timerDisplay.classList.remove('text-red-500'); // 移除討論結束前的紅色警告色
+  timerDisplay.classList.add('text-white');
+  
+  stopBtn.classList.add('hidden');
 
   // 動態生成目前選中的角色清單供玩家查看
   roleListContainer.innerHTML = '';
@@ -72,13 +88,6 @@ function handleStartGame() {
       roleListContainer.appendChild(item);
     }
   });
-
-  gameModal.classList.remove('hidden');
-  statusTitle.innerText = "🌙 夜晚進行中...";
-  statusDesc.innerText = "請聽從語音導覽指示行動";
-  timerDisplay.classList.remove('hidden');
-  timerDisplay.innerText = "";
-  stopBtn.classList.add('hidden');
 
   // 2. 開始播放語音
   playNightFlow(queue, () => {
@@ -530,6 +539,46 @@ function adjustTimeSetting(type, delta) {
 }
 
 /**
+ * 試聽角色語音
+ * @param {string} roleId 角色 ID
+ * @param {HTMLElement} btn 按鈕元素，用於切換文字狀態
+ */
+function togglePreview(roleId, btn) {
+  // 1. 如果正在播放，則停止並清除
+  if (previewAudio) {
+    previewAudio.pause();
+    previewAudio = null;
+    btn.innerText = "🔊 試聽夜晚語音";
+    btn.classList.replace('bg-red-600', 'bg-blue-600');
+    return;
+  }
+
+  // 2. 停止主遊戲可能正在播放的音訊
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  // 3. 播放新音訊 (檔名規則同夜晚流程)
+  previewAudio = new Audio(`assets/audio/${roleId}.mp3`);
+  btn.innerText = "⏹️ 停止播放";
+  btn.classList.replace('bg-blue-600', 'bg-red-600');
+
+  previewAudio.onended = () => {
+    previewAudio = null;
+    btn.innerText = "🔊 試聽夜晚語音";
+    btn.classList.replace('bg-red-600', 'bg-blue-600');
+  };
+
+  previewAudio.play().catch(e => {
+    console.error("試聽播放失敗:", e);
+    alert("找不到該角色的語音檔");
+    previewAudio = null;
+    btn.innerText = "🔊 試聽夜晚語音";
+  });
+}
+
+/**
  * 顯示通用規則說明 Modal
  */
 function showGeneralRules() {
@@ -546,25 +595,51 @@ function closeRulesModal() {
 }
 
 function showModalById(roleId) {
-  const role = ROLES.find(r => r.id === roleId);
+  const role = ROLES.find(r => r.id === roleId); //
   if (role) {
     const modalIcon = document.getElementById('modal-icon');
-    document.getElementById('modal-name').innerText = role.name;
-    document.getElementById('modal-desc').innerText = role.description;
+    document.getElementById('modal-name').innerText = role.name; //
+    document.getElementById('modal-desc').innerText = role.description; //
 
-    // 如果有圖片就顯示圖片，沒有就顯示預設 Emoji
+    // 處理圖片顯示
     if (role.image) {
       modalIcon.innerHTML = `<img src="${role.image}" class="w-full h-full object-cover rounded-full">`;
     } else {
       modalIcon.innerHTML = `👤`;
     }
 
-    document.getElementById('role-modal').classList.remove('hidden');
+    // --- 新增：處理試聽按鈕 ---
+    let previewBtnContainer = document.getElementById('preview-btn-container');
+    if (!previewBtnContainer) {
+      // 如果 HTML 裡沒預留，就在描述後方動態加入
+      previewBtnContainer = document.createElement('div');
+      previewBtnContainer.id = 'preview-btn-container';
+      document.getElementById('modal-desc').after(previewBtnContainer);
+    }
+
+    // 只有有夜晚行動的角色才顯示按鈕
+    if (role.hasAction) {
+      previewBtnContainer.innerHTML = `
+        <button id="preview-btn" onclick="togglePreview('${role.id}', this)" 
+          class="w-full mb-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition text-sm">
+          🔊 試聽夜晚語音
+        </button>
+      `;
+    } else {
+      previewBtnContainer.innerHTML = ""; // 無行動角色不顯示
+    }
+
+    document.getElementById('role-modal').classList.remove('hidden'); //
   }
 }
 
 function closeModal() {
-  document.getElementById('role-modal').classList.add('hidden');
+  // 關閉視窗時停止試聽
+  if (previewAudio) {
+    previewAudio.pause();
+    previewAudio = null;
+  }
+  document.getElementById('role-modal').classList.add('hidden'); //
 }
 
 init();
