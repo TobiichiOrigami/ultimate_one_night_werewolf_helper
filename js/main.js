@@ -348,7 +348,7 @@ function renderGrid() {
       ${roleImage}
       <div class="text-xs font-bold text-center">${role.name}</div>
       ${controlsHTML}
-      <button onclick="event.stopPropagation(); showModalById('${role.id}')" class="absolute top-1 right-1 text-gray-500 text-xs p-1">ⓘ</button>
+      <button onclick="event.stopPropagation(); showModalById('${role.id}')" class="absolute top-1 right-1 text-green-500 text-xs p-1">ⓘ</button>
     `;
 
     card.onclick = () => {
